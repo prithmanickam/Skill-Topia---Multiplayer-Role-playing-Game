@@ -1,4 +1,4 @@
-
+#iteration3
 import pygame
 from pygame.locals import *
 import os
@@ -24,7 +24,7 @@ FPS_CLOCK = pygame.time.Clock()
 COUNT = 0
 
 window = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Game")
+pygame.display.set_caption("Skill-Topia")
 
 # light shade of the button 
 color_light = (170,170,170)
@@ -34,8 +34,9 @@ color_white = (255,255,255)
 # defining a font
 headingfont = pygame.font.SysFont("Verdana", 40)
 regularfont = pygame.font.SysFont('Corbel',25)
-smallerfont = pygame.font.SysFont('Corbel',16) 
-text = regularfont.render('LOAD' , True , color_light)
+smallerfont = pygame.font.SysFont('Corbel',16)
+tinyfont = pygame.font.SysFont('Corbel',11) 
+#text = regularfont.render('LOAD' , True , color_light)
 
 
 skills = {'attack':{'lvl':1,'xp':0},'mining':{'lvl':1,'xp':0},'fishing':{'l':1,'xp':0},'woodcutting':{'lvl':1,'xp':0}}
@@ -111,47 +112,67 @@ class Border(pygame.sprite.Sprite):
 
 class Skills(pygame.sprite.Sprite): #draw square
       def __init__(self):
-            self.border = pygame.Rect(645,0,10,HEIGHT)
-
+          super().__init__()
+          image = pygame.image.load(os.path.join('assets','skill stats.png'))
+          self.image = pygame.transform.scale(image, (230,313))
+          self.rect = self.image.get_rect(center = (778, 320))
       def render(self):
-            pygame.draw.rect(window,GREY, self.border)
+          window.blit(self.image, (self.rect.x, self.rect.y))
+          text = regularfont.render('Skill Stats', True , color_white)
+          window.blit(text, (700, 170))
+          
+          #text, will keep getting updated every tick
+          #mining
+          text = smallerfont.render('mining', True , color_white)
+          window.blit(text, (700, 200))
+          text = tinyfont.render('lvl: ' + str(player.minelvl), True , color_white)
+          window.blit(text, (700, 215))
+          text = tinyfont.render('xp: ' + str(player.curminexp) + '/' + str(player.endminexp), True , color_white)
+          window.blit(text, (700, 230))
+          text = tinyfont.render('tot: ' + str(player.totminexp) , True , color_white)
+          window.blit(text, (700, 245))
+          
             
 class Ore(pygame.sprite.Sprite):
       
       def __init__(self):
             super().__init__()
+            self.hide = False
             image = pygame.image.load(os.path.join('assets','ores.png'))
             self.image = pygame.transform.scale(image, (190,120))
             self.rect = self.image.get_rect(center = (550, 420))
 
-      def render(self):
-            window.blit(self.image, (self.rect.x, self.rect.y))
+      def update(self):
+            if self.hide == False:
+                  window.blit(self.image, (self.rect.x, self.rect.y))
 
 class Trees(pygame.sprite.Sprite):
       
       def __init__(self):
             super().__init__()
+            self.hide = False
             image = pygame.image.load(os.path.join('assets','trees.png'))
             self.image = pygame.transform.scale(image, (190,180))
             self.rect = self.image.get_rect(center = (550, 90))
 
-      def render(self):
-            window.blit(self.image, (self.rect.x, self.rect.y))
+      def update(self):
+            if self.hide == False:
+                  window.blit(self.image, (self.rect.x, self.rect.y))
 
 class Dungeon(pygame.sprite.Sprite):
       
       def __init__(self):
             super().__init__()
+            self.hide = False
             image = pygame.image.load(os.path.join('assets','dungeon.png'))
             self.image = pygame.transform.scale(image, (190,180))
             self.rect = self.image.get_rect(center = (70, 90))
 
-      def render(self):
-            window.blit(self.image, (self.rect.x, self.rect.y)) 
+      def update(self):
+            if self.hide == False:
+                  window.blit(self.image, (self.rect.x, self.rect.y)) 
 
 
-
-#player1 = Player(makeSprite("boyninjarun.png", 24), p1Proj, (800, 700), screenW, scrollRate, options.keysP1)
 class Player(pygame.sprite.Sprite):
       def __init__(self):
             super().__init__()
@@ -166,6 +187,7 @@ class Player(pygame.sprite.Sprite):
             self.vel = vec(0,0)
             self.acc = vec(0,0)
             self.direction = "RIGHT"
+            #self.map = 1
             self.jumping = False
             self.running = True
             self.move_frame = 0
@@ -178,21 +200,23 @@ class Player(pygame.sprite.Sprite):
             self.mining = False
             self.mine_frame = 0
 
+            #using indexing to work out much xp is needed to level up
+            self.lvls = [ 2, 3, 4, 5,  6,  7,  8,   9,  10,  11,  12,  13,  14,  15]
+            self.xpcap =[10,20,40,80,160,320,640,1280,2560,3500,4500,5500,6500,8000]
+
+            self.totminexp = 0
+            self.curminexp = 0
+            self.endminexp = self.xpcap[0]
+            self.minelvl = 1
+            self.x = []
+
 
       
       def move(self):
 
             self.acc = vec(0,0.5)
 
-            # Will set running to False if the player has slowed down to a certain extent
-            #if abs(self.vel.x) > 0.3:
-            #      self.running = True
-            #      print('true')
-            #else:
-            #      self.running = False
-          
-          
-            # Returns the current key presses
+            
             pressed_keys = pygame.key.get_pressed()
           
  
@@ -277,11 +301,31 @@ class Player(pygame.sprite.Sprite):
  
             # Update the current attack frame  
             self.mine_frame += 1
-
-            rand_num = random.uniform(1,100)
-            
             
       
+            
+      def calminexp(self,a):
+            
+            self.totminexp += a
+            self.curminexp += a
+            
+            
+            for i,j in enumerate(self.xpcap):
+                  
+                  if self.xpcap[i] in self.x:
+                        print('true')
+                        continue
+                  elif self.curminexp >= self.xpcap[i]:
+                        self.x.append(self.xpcap[i])
+                        
+                        self.curminexp = self.endminexp - self.xpcap[i]
+                        
+                        self.endminexp =  self.xpcap[i + 1]
+                        
+                        self.minelvl = self.lvls[i]
+                  break
+            
+
       def correction(self,a):
             
             # Function is used to correct an error
@@ -310,17 +354,14 @@ class StatusBar(pygame.sprite.Sprite):
             self.text = regularfont.render(a , True , color_white)
             #text1 = smallerfont.render("STAGE: " + str(handler.stage) , True , color_white)
             #text2 = smallerfont.render("EXP: " + str(player.experiance) , True , color_white)
-            #text3 = smallerfont.render("MANA: " + str(player.mana) , True , color_white)
-            #text4 = smallerfont.render("FPS: " + str(int(FPS_CLOCK.get_fps())) , True , color_white)
-            #self.exp = player.experiance
+            
             #print('printing')
             # Draw the text to the status bar
             window.blit(self.text, (675, 20))
             
             #displaysurface.blit(text1, (585, 7))
             #displaysurface.blit(text2, (585, 22))
-            #displaysurface.blit(text3, (585, 37))
-            #displaysurface.blit(text4, (585, 52))
+            
       
                    
                 
@@ -366,9 +407,11 @@ class EventHandler():
       def world1(self):
             self.root.destroy()
             pygame.time.set_timer(self.enemy_generation, 2000)
-            button.imgdisp = 1
-            castle.hide = True
-            self.battle = True
+            #button.imgdisp = 1
+            ore.hide = True
+            trees.hide = True
+            dungeon.hide = True
+            #self.battle = True
 
       def world2(self):
             self.root.destroy()
@@ -388,6 +431,14 @@ class EventHandler():
       def world3(self):
             self.battle = True
             button.imgdisp = 1
+
+##      def map1(self):
+##            
+##            #button.imgdisp = 1
+##            ore.hide = True
+##            trees.hide = True
+##            dungeon.hide = True
+##            #self.battle = True
  
             
 #objects
@@ -400,6 +451,7 @@ trees = Trees()
 dungeon = Dungeon()
 border = Border()
 handler = EventHandler()
+skills = Skills()
 status_bar = StatusBar()
 #dts = DisplayToScr()
 t = ''
@@ -425,13 +477,14 @@ while True:
             if event.type == pygame.KEYDOWN:
 
                   
-                  #mining     
+                  #mining   #also if there in certain map  
                   if event.key == pygame.K_q and 450 < player.rect.x < 650 and 300 < player.rect.y < 500:
                         rand_num = random.uniform(1,100)
 
                         if rand_num >= 0 and rand_num <= 25:  # 1 / 4 chance for an item (health) drop
                               print('rare')
-                              t = 'You got ore. +10xp.'
+                              t = 'You got ore. +5xp.'
+                              player.calminexp(5)
                               #do updatemusic which plays sound once
                               
                               
@@ -471,9 +524,10 @@ while True:
       player.move()
       #background.render()
       
-      ore.render()
-      trees.render()
-      dungeon.render()
+      ore.update()
+      trees.update()
+      dungeon.update()
+      skills.render()
       #window.blit(status_bar.surf, (675, 20))
       #print(t)
       text = regularfont.render(t , True , color_white)

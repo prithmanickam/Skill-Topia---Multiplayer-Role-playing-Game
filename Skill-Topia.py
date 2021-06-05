@@ -1,4 +1,4 @@
-#iteration3
+
 import pygame
 from pygame.locals import *
 import os
@@ -14,6 +14,7 @@ pygame.init()  # Begin pygame
 vec = pygame.math.Vector2
 GREEN = (173,255,47)
 GREY = (128,128,128)
+BLACK = (0,0,0)
 HEIGHT = 485
 WIDTH = 900
 VEL = 3
@@ -129,31 +130,71 @@ class Skills(pygame.sprite.Sprite): #draw square
           window.blit(text, (700, 215))
           text = tinyfont.render('xp: ' + str(player.curminexp) + '/' + str(player.endminexp), True , color_white)
           window.blit(text, (700, 230))
-          text = tinyfont.render('tot: ' + str(player.totminexp) , True , color_white)
-          window.blit(text, (700, 245))
+          #text = tinyfont.render('tot: ' + str(player.totminexp) , True , color_white)
+          #window.blit(text, (700, 245))
           
+          #woodcutting
+          text = smallerfont.render('wdcutting', True , color_white)
+          window.blit(text, (800, 200))
+          text = tinyfont.render('lvl: ' + str(player.wcutlvl), True , color_white)
+          window.blit(text, (800, 215))
+          text = tinyfont.render('xp: ' + str(player.curwcutxp) + '/' + str(player.endwcutxp), True , color_white)
+          window.blit(text, (800, 230))          
+               
+class StatusBar(pygame.sprite.Sprite):
+      def __init__(self):
+            super().__init__()
+            image = pygame.image.load(os.path.join('assets','status.png'))
+            self.image = pygame.transform.scale(image, (230,155))
+            self.rect = self.image.get_rect(center = (777, 80))
+            
+      def update(self):
+            window.blit(self.image, (self.rect.x, self.rect.y))
+            text = regularfont.render('Update:', True , BLACK)
+            window.blit(text, (685, 25))
+            text = smallerfont.render(player.upd, True , BLACK)
+            window.blit(text, (685, 50))
+            text = regularfont.render('Level Update:', True , BLACK)
+            window.blit(text, (685, 85))
+            text = smallerfont.render(player.lvlupd, True , BLACK)
+            window.blit(text, (685, 110))
+
+             
             
 class Ore(pygame.sprite.Sprite):
       
-      def __init__(self):
+      def __init__(self, orename, posx, posy):
             super().__init__()
             self.hide = False
-            image = pygame.image.load(os.path.join('assets','ores.png'))
-            self.image = pygame.transform.scale(image, (190,120))
-            self.rect = self.image.get_rect(center = (550, 420))
+            image = pygame.image.load(os.path.join('assets',orename))
+            self.image = pygame.transform.scale(image, (65,55))
+            self.rect = self.image.get_rect(center = (posx, posy))
 
       def update(self):
             if self.hide == False:
                   window.blit(self.image, (self.rect.x, self.rect.y))
 
-class Trees(pygame.sprite.Sprite):
+class Tree(pygame.sprite.Sprite):
       
-      def __init__(self):
+      def __init__(self, treename, posx, posy):
             super().__init__()
             self.hide = False
-            image = pygame.image.load(os.path.join('assets','trees.png'))
-            self.image = pygame.transform.scale(image, (190,180))
-            self.rect = self.image.get_rect(center = (550, 90))
+            image = pygame.image.load(os.path.join('assets',treename))
+            self.image = pygame.transform.scale(image, (150,140))
+            self.rect = self.image.get_rect(center = (posx, posy))
+
+      def update(self):
+            if self.hide == False:
+                  window.blit(self.image, (self.rect.x, self.rect.y))
+
+class Lake(pygame.sprite.Sprite):
+      
+      def __init__(self, lakename, posx, posy):
+            super().__init__()
+            self.hide = False
+            image = pygame.image.load(os.path.join('assets',lakename))
+            self.image = pygame.transform.scale(image, (210,200))
+            self.rect = self.image.get_rect(center = (posx, posy))
 
       def update(self):
             if self.hide == False:
@@ -161,18 +202,20 @@ class Trees(pygame.sprite.Sprite):
 
 class Dungeon(pygame.sprite.Sprite):
       
-      def __init__(self):
+      def __init__(self, dname, posx, posy):
             super().__init__()
             self.hide = False
-            image = pygame.image.load(os.path.join('assets','dungeon.png'))
+            image = pygame.image.load(os.path.join('assets',dname))
             self.image = pygame.transform.scale(image, (190,180))
-            self.rect = self.image.get_rect(center = (70, 90))
+            self.rect = self.image.get_rect(center = (posx, posy))
 
       def update(self):
             if self.hide == False:
                   window.blit(self.image, (self.rect.x, self.rect.y)) 
 
 
+
+#player1 = Player(makeSprite("boyninjarun.png", 24), p1Proj, (800, 700), screenW, scrollRate, options.keysP1)
 class Player(pygame.sprite.Sprite):
       def __init__(self):
             super().__init__()
@@ -187,28 +230,44 @@ class Player(pygame.sprite.Sprite):
             self.vel = vec(0,0)
             self.acc = vec(0,0)
             self.direction = "RIGHT"
-            #self.map = 1
+            self.map = 1 #player starts here on the map
             self.jumping = False
             self.running = True
             self.move_frame = 0
 
             
 
-            self.attacking = False
-            self.attack_frame = 0
+            
 
-            self.mining = False
-            self.mine_frame = 0
+            
+
+            self.upd = ''
+            self.lvlupd = ''
 
             #using indexing to work out much xp is needed to level up
             self.lvls = [ 2, 3, 4, 5,  6,  7,  8,   9,  10,  11,  12,  13,  14,  15]
             self.xpcap =[10,20,40,80,160,320,640,1280,2560,3500,4500,5500,6500,8000]
 
+            self.mining = False
+            self.mine_frame = 0
+
             self.totminexp = 0
             self.curminexp = 0
             self.endminexp = self.xpcap[0]
             self.minelvl = 1
-            self.x = []
+            self.mx = []
+
+            self.wdcutting = False
+            self.wcut_frame = 0
+
+            self.totwcutxp = 0
+            self.curwcutxp = 0
+            self.endwcutxp = self.xpcap[0]
+            self.wcutlvl = 1
+            self.wx = []
+
+            self.attacking = False
+            self.attack_frame = 0
 
 
       
@@ -216,7 +275,15 @@ class Player(pygame.sprite.Sprite):
 
             self.acc = vec(0,0.5)
 
-            
+            # Will set running to False if the player has slowed down to a certain extent
+            #if abs(self.vel.x) > 0.3:
+            #      self.running = True
+            #      print('true')
+            #else:
+            #      self.running = False
+          
+          
+            # Returns the current key presses
             pressed_keys = pygame.key.get_pressed()
           
  
@@ -233,19 +300,34 @@ class Player(pygame.sprite.Sprite):
             if pressed_keys[K_DOWN] and self.pos.y < HEIGHT:
                   self.pos.y += VEL
                   self.acc.x = ACC
+
+            #move to map 2
+            if pressed_keys[K_UP] and self.map == 1 and 230 < self.pos.x < 330 and 0 <= self.pos.y < 50:
+                  self.map = 2
+                  handler.map2()
+                  self.pos.y = HEIGHT
+            #move to map 1 from map 2
+            if pressed_keys[K_DOWN] and self.map == 2 and 230 < self.pos.x < 330 and HEIGHT -50 <= self.pos.y < HEIGHT:
+                  self.map = 1
+                  handler.map1()
+                  self.pos.y = 0
+                  
+                        
             # Formulas to calculate velocity while accounting for friction
             self.acc.x += self.vel.x * FRIC
             #print('self.moveframe = ' +str(self.move_frame))
             self.vel += self.acc
             #self.pos += self.vel + 0.5 * self.acc  # Updates Position with new values
             #self.vel += self.pos
+
+            
                 
             self.rect.midbottom = self.pos  # Update rect with new pos
 
 
                       
       def update(self):
-          #print('self.moveframe = ' +str(self.move_frame))
+          
           # Return to base frame if at end of movement sequence 
           if self.move_frame > 6:
                 self.move_frame = 0
@@ -253,7 +335,7 @@ class Player(pygame.sprite.Sprite):
           
           # Move the character to the next frame if conditions are met 
           if self.jumping == False and self.running == True:
-                #print(abs(self.vel.x))
+                
                 if self.vel.x > 0:
                       self.image = run_ani_R[self.move_frame]
                       self.direction = "RIGHT"
@@ -302,7 +384,6 @@ class Player(pygame.sprite.Sprite):
             # Update the current attack frame  
             self.mine_frame += 1
             
-      
             
       def calminexp(self,a):
             
@@ -312,20 +393,59 @@ class Player(pygame.sprite.Sprite):
             
             for i,j in enumerate(self.xpcap):
                   
-                  if self.xpcap[i] in self.x:
-                        print('true')
+                  if self.xpcap[i] in self.mx:
+                        #print('true')
                         continue
                   elif self.curminexp >= self.xpcap[i]:
-                        self.x.append(self.xpcap[i])
+                        self.mx.append(self.xpcap[i])
                         
                         self.curminexp = self.endminexp - self.xpcap[i]
                         
                         self.endminexp =  self.xpcap[i + 1]
                         
                         self.minelvl = self.lvls[i]
+                        player.lvlupd = 'You achieved level ' + str(self.minelvl) + ' in mining!'
                   break
-            
 
+      def wcut(self):
+            # If attack frame has reached end of sequence, return to base frame      
+            if self.wcut_frame > 10:
+                  self.wcut_frame = 0
+                  self.wdcutting = False
+       
+            # Check direction for correct animation to display  
+            if self.direction == "RIGHT":
+                   self.image = attack_ani_R[self.wcut_frame]
+            elif self.direction == "LEFT":
+                   self.correction(self.mine_frame)
+                   self.image = attack_ani_L[self.wcut_frame] 
+ 
+            # Update the current attack frame  
+            self.wcut_frame += 1
+            
+            
+      def calwcutxp(self,a):
+            
+            self.totwcutxp += a
+            self.curwcutxp += a
+            
+            
+            for i,j in enumerate(self.xpcap):
+                  
+                  if self.xpcap[i] in self.wx:
+                        continue
+                  elif self.curwcutxp >= self.xpcap[i]:
+                        self.wx.append(self.xpcap[i])
+                        
+                        self.curwcutxp = self.endwcutxp - self.xpcap[i]
+                        
+                        self.endwcutxp =  self.xpcap[i + 1]
+                        
+                        self.wcutlvl = self.lvls[i]
+                        player.lvlupd = 'You achieved lvl ' + str(self.wcutlvl) + ' wdcutting!'
+                  break
+                  
+      
       def correction(self,a):
             
             # Function is used to correct an error
@@ -334,35 +454,9 @@ class Player(pygame.sprite.Sprite):
                   self.pos.x -= 20
             if a == 10:
                   self.pos.x += 20
-                  
-class StatusBar(pygame.sprite.Sprite):
-      def __init__(self):
-            super().__init__()
-            self.surf = pygame.Surface((205, 140))
-            self.rect = self.surf.get_rect(center = (850, 30))
-            #self.last = pygame.time.get_ticks()
-            #self.statuscooldown = 2000 #2 sec
-            self.text = regularfont.render('' , True , color_white)
-            window.blit(self.text, (675, 20))
-            
-            #self.exp = player.experiance
-            
-      def update_draw(self,a):
-            # Create the text to be displayed
 
-            
-            self.text = regularfont.render(a , True , color_white)
-            #text1 = smallerfont.render("STAGE: " + str(handler.stage) , True , color_white)
-            #text2 = smallerfont.render("EXP: " + str(player.experiance) , True , color_white)
-            
-            #print('printing')
-            # Draw the text to the status bar
-            window.blit(self.text, (675, 20))
-            
-            #displaysurface.blit(text1, (585, 7))
-            #displaysurface.blit(text2, (585, 22))
-            
-      
+
+ 
                    
                 
 class Enemy(pygame.sprite.Sprite):
@@ -409,7 +503,7 @@ class EventHandler():
             pygame.time.set_timer(self.enemy_generation, 2000)
             #button.imgdisp = 1
             ore.hide = True
-            trees.hide = True
+            otree1.hide = True
             dungeon.hide = True
             #self.battle = True
 
@@ -432,32 +526,69 @@ class EventHandler():
             self.battle = True
             button.imgdisp = 1
 
-##      def map1(self):
-##            
-##            #button.imgdisp = 1
-##            ore.hide = True
-##            trees.hide = True
-##            dungeon.hide = True
-##            #self.battle = True
- 
+      def map1(self):
             
-#objects
+            #objects in map1
+            c_ore1.hide = False
+            c_ore2.hide = False
+            c_ore3.hide = False
+            s_ore1.hide = False
+            d_ore1.hide = False
+            otree1.hide = False
+            otree2.hide = False
+            otree3.hide = False
+            wtree1.hide = False
+            mtree1.hide = False
+            dungeon.hide = False
+            #self.battle = True
+            
+      def map2(self):
+            
+            #objects in map1
+            c_ore1.hide = True
+            c_ore2.hide = True
+            c_ore3.hide = True
+            s_ore1.hide = True
+            d_ore1.hide = True
+            otree1.hide = True
+            otree2.hide = True
+            otree3.hide = True
+            wtree1.hide = True
+            mtree1.hide = True
+            dungeon.hide = True
+            #self.battle = True
+            
+#Objects.
+#passing arguments changes the type of object and its position quickly
 
 background = Background()
 ground = Ground()
+
+#map 1 objects
 player = Player()
-ore = Ore()      #can pass in values to create different type of ores
-trees = Trees()
-dungeon = Dungeon()
+c_ore1 = Ore('copper ore.png', 600, 450)
+c_ore2 = Ore('copper ore.png', 610, 410)
+c_ore3 = Ore('copper ore.png', 550, 460)
+s_ore1 = Ore('silver ore.png', 460, 400)
+d_ore1 = Ore('diamond ore.png', 35, 150)
+otree1 = Tree('oak tree.png',570,80)
+otree2 = Tree('oak tree.png',530,130)
+otree3 = Tree('oak tree.png',330,430)
+wtree1 = Tree('willow tree.png',240,410)
+mtree1 = Tree('maple tree.png',230,60)
+lake1 = Lake('lake2.png',90,400)
+dungeon = Dungeon('dungeon.png', 100, 75)
+
+
 border = Border()
 handler = EventHandler()
 skills = Skills()
 status_bar = StatusBar()
-#dts = DisplayToScr()
 t = ''
+
 while True:
       window.fill(GREEN)
-      window.blit(status_bar.surf, (675, 20))
+      #window.blit(status_bar.surf, (675, 20))
       
       #start_time = get_current_time()
     #mouse = pygame.mouse.get_pos()
@@ -477,61 +608,135 @@ while True:
             if event.type == pygame.KEYDOWN:
 
                   
-                  #mining   #also if there in certain map  
-                  if event.key == pygame.K_q and 450 < player.rect.x < 650 and 300 < player.rect.y < 500:
+                  #mining (use ors and ands)
+                  
+                  #copper ore
+                  if event.key == pygame.K_q and player.map ==1 and 480 < player.rect.x < 650 and 345 < player.rect.y < 500:
                         rand_num = random.uniform(1,100)
 
                         if rand_num >= 0 and rand_num <= 25:  # 1 / 4 chance for an item (health) drop
                               print('rare')
-                              t = 'You got ore. +5xp.'
+                              player.upd = 'You swung and got ore! + 5xp'
                               player.calminexp(5)
                               #do updatemusic which plays sound once
                               
-                              
                         elif rand_num >25 and rand_num <= 100:
                               print('comman')
-                              t = 'You hit the rock.'
-                              #status_bar.update_draw("You hit the rock.")
+                              player.upd = 'You swing and miss the rock.'
 
-                        
                         if player.mining == False:
                               
                               player.mine()
-                              
-                              
-            
-                                                            #time.sleep(1)
                               player.mining = True
+
+                  #silver ore ####
+                  if event.key == pygame.K_q and player.map ==1 and 400 < player.rect.x < 480 and 330 < player.rect.y < 400:
+                        if player.minelvl < 5:
+                              player.upd = 'Need lvl 5 mining to mine silver.'
+                        else:
+                              rand_num = random.uniform(1,100)
+
+                              if rand_num >= 0 and rand_num <= 20:  # 1 / 4 chance for an item (health) drop
+                                    print('rare')
+                                    player.upd = 'Swung and got silver ore! + 5xp'
+                                    player.calminexp(20)
+                                    #do updatemusic which plays sound once
+                                    
+                              elif rand_num >20 and rand_num <= 100:
+                                    print('comman')
+                                    player.upd = 'You swing and miss the rock.'
+
+                              if player.mining == False:
+                                    
+                                    player.mine()
+                                    player.mining = True
+
+                  #trees                 
+                  #oak tree
+                  if event.key == pygame.K_q and player.map ==1 and ((480 < player.rect.x < 650 and 20 < player.rect.y < 160)or(270 < player.rect.x < 360 and 360 < player.rect.y < HEIGHT)):
+                        rand_num = random.uniform(1,100)
+
+                        if rand_num >= 0 and rand_num <= 20:  # 1 / 4 chance for an item (health) drop
+                              print('rare')
+                              player.upd = 'Swung and got oak logs! + 5xp'
+                              player.calwcutxp(5)
+                              #do updatemusic which plays sound once
                               
-                  if event.key == pygame.K_q and 0 < player.rect.x < 155 and 0 < player.rect.y < 150:
-                        handler.stage_handler()        
+                        elif rand_num >20 and rand_num <= 100:
+                              print('comman')
+                              player.upd = 'You swing and miss the tree.'
+
+                        if player.wdcutting == False:
+                              
+                              player.wcut()
+                              player.wdcutting = True
+
+                  #willow tree
+                  if event.key == pygame.K_q and player.map ==1 and 180 < player.rect.x < 250 and 360 < player.rect.y < 470:
+                        if player.wcutlvl < 5:
+                              player.upd = 'Need lvl 5 wdcut to cut willow.'
+                        else:      
+                              rand_num = random.uniform(1,100)
+
+                              if rand_num >= 0 and rand_num <= 20:  # 1 / 4 chance for an item (health) drop
+                                    print('rare')
+                                    player.upd = 'Swung & got willow logs! + 5xp'
+                                    player.calwcutxp(5)
+                                    #do updatemusic which plays sound once
+                                    
+                              elif rand_num >20 and rand_num <= 100:
+                                    print('comman')
+                                    player.upd = 'You swing and miss the tree.'
+
+                              if player.wdcutting == False:
+                                    
+                                    player.wcut()
+                                    player.wdcutting = True
+
+                  #to enter dungeon           
+                  if event.key == pygame.K_q and player.map == 1 and 0 < player.rect.x < 155 and 0 < player.rect.y < 150:
+                        
+                        handler.stage_handler()
+                  
+                   
       
       
       border.render()
       player.update()
       
-      if player.mining == True:
-                                  #call a display function and pass in the text?
-            
-            
-                  
+      if player.mining == True:     
             player.mine()
-            
-            
+
+      if player.wdcutting == True:     
+            player.wcut()
+             
       if player.attacking == True:
             player.attack()
             
       player.move()
       #background.render()
+      c_ore2.update()
+      c_ore1.update()
       
-      ore.update()
-      trees.update()
+      c_ore3.update()
+      s_ore1.update()
       dungeon.update()
+      d_ore1.update()
+      otree1.update()
+      otree2.update()
+      otree3.update()
+      wtree1.update()
+      mtree1.update()
+      lake1.update()
+      
+
+      
       skills.render()
+      status_bar.update()
       #window.blit(status_bar.surf, (675, 20))
       #print(t)
-      text = regularfont.render(t , True , color_white)
-      window.blit(text, (675, 20))
+##      text = regularfont.render(t , True , color_white)
+##      window.blit(text, (675, 20))
             
       #status_bar.update_draw()
       window.blit(player.image, player.rect)

@@ -1,4 +1,3 @@
-
 import pygame
 from pygame.locals import *
 import os
@@ -15,6 +14,7 @@ vec = pygame.math.Vector2
 GREEN = (173,255,47)
 GREY = (128,128,128)
 BLACK = (0,0,0)
+BLACK = (255,255,255)
 HEIGHT = 485
 WIDTH = 900
 VEL = 3
@@ -70,6 +70,10 @@ attack_ani_L = [pygame.image.load(os.path.join('assets',"Player_Sprite_L.png")),
                 pygame.image.load(os.path.join('assets',"Player_Attack5_L.png")),pygame.image.load(os.path.join('assets',"Player_Attack5_L.png")),
                 pygame.image.load(os.path.join('assets',"Player_Sprite_L.png"))]
 
+# Animations for the Health Bar
+health_ani = [pygame.image.load(os.path.join('assets',"heart0.png")), pygame.image.load(os.path.join('assets',"heart.png")),
+              pygame.image.load(os.path.join('assets',"heart2.png")), pygame.image.load(os.path.join('assets',"heart3.png")),
+              pygame.image.load(os.path.join('assets',"heart4.png")), pygame.image.load(os.path.join('assets',"heart5.png"))]
 
 class Background(pygame.sprite.Sprite):
       def __init__(self):
@@ -83,12 +87,15 @@ class Background(pygame.sprite.Sprite):
  
 
 class Ground(pygame.sprite.Sprite):
-      def __init__(self):
-          super().__init__()
-          self.image = pygame.image.load(os.path.join('assets','Ground.png'))
-          self.rect = self.image.get_rect(center = (350, 350))
-      def render(self):
-          window.blit(self.image, (self.rect.x, self.rect.y))
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load(os.path.join('assets',"Ground.png"))
+        self.rect = self.image.get_rect(center = (450, 450))
+        self.bgX1 = 0
+        self.bgY1 = 390
+
+    def render(self):
+        window.blit(self.image, (self.bgX1, self.bgY1)) 
 
 '''
 Using the get_rect() method on the image object will return a rectangle object
@@ -139,7 +146,15 @@ class Skills(pygame.sprite.Sprite): #draw square
           text = tinyfont.render('lvl: ' + str(player.wcutlvl), True , color_white)
           window.blit(text, (800, 215))
           text = tinyfont.render('xp: ' + str(player.curwcutxp) + '/' + str(player.endwcutxp), True , color_white)
-          window.blit(text, (800, 230))          
+          window.blit(text, (800, 230))
+
+          #attack
+          text = smallerfont.render('attack', True , color_white)
+          window.blit(text, (700, 260))
+          text = tinyfont.render('lvl: ' + str(player.attlvl), True , color_white)
+          window.blit(text, (700, 275))
+          text = tinyfont.render('xp: ' + str(player.curattxp) + '/' + str(player.endattxp), True , color_white)
+          window.blit(text, (700, 290))
                
 class StatusBar(pygame.sprite.Sprite):
       def __init__(self):
@@ -235,12 +250,6 @@ class Player(pygame.sprite.Sprite):
             self.running = True
             self.move_frame = 0
 
-            
-
-            
-
-            
-
             self.upd = ''
             self.lvlupd = ''
 
@@ -268,6 +277,20 @@ class Player(pygame.sprite.Sprite):
 
             self.attacking = False
             self.attack_frame = 0
+            
+            
+            self.totattxp = 0
+            self.curattxp = 0
+            self.endattxp = self.xpcap[0]
+            self.attlvl = 1
+            self.atx = []
+            self.immune = False
+            self.special = False
+            self.experiance = 0
+            self.cooldown = False
+            self.health = 5
+            self.magic_cooldown = 1
+            self.mana = 0
 
 
       
@@ -275,20 +298,12 @@ class Player(pygame.sprite.Sprite):
 
             self.acc = vec(0,0.5)
 
-            # Will set running to False if the player has slowed down to a certain extent
-            #if abs(self.vel.x) > 0.3:
-            #      self.running = True
-            #      print('true')
-            #else:
-            #      self.running = False
-          
-          
             # Returns the current key presses
             pressed_keys = pygame.key.get_pressed()
           
  
             # Accelerates the player in the direction of the key press
-            if pressed_keys[K_LEFT] and self.pos.x - 10 > 0:
+            if pressed_keys[K_LEFT] and self.pos.x - 10 > 0: #collision with borders!!!!!
                   self.pos.x -= VEL
                   self.acc.x = -ACC
             if pressed_keys[K_RIGHT] and self.pos.x < 640:
@@ -306,6 +321,7 @@ class Player(pygame.sprite.Sprite):
                   self.map = 2
                   handler.map2()
                   self.pos.y = HEIGHT
+                  
             #move to map 1 from map 2
             if pressed_keys[K_DOWN] and self.map == 2 and 230 < self.pos.x < 330 and HEIGHT -50 <= self.pos.y < HEIGHT:
                   self.map = 1
@@ -315,42 +331,124 @@ class Player(pygame.sprite.Sprite):
                         
             # Formulas to calculate velocity while accounting for friction
             self.acc.x += self.vel.x * FRIC
-            #print('self.moveframe = ' +str(self.move_frame))
             self.vel += self.acc
-            #self.pos += self.vel + 0.5 * self.acc  # Updates Position with new values
-            #self.vel += self.pos
-
             
-                
+
             self.rect.midbottom = self.pos  # Update rect with new pos
 
+      #movement in the dungeon, uses acceleration 
+      def dungeonmove(self):
+            # Keep a constant acceleration of 0.5 in the downwards direction (gravity)
+            self.acc = vec(0,0.5)
 
-                      
+            # Will set running to False if the player has slowed down to a certain extent
+            if abs(self.vel.x) > 0.3:
+                  self.running = True
+            else:
+                  self.running = False
+
+            # Returns the current key presses
+            pressed_keys = pygame.key.get_pressed()
+
+            # Accelerates the player in the direction of the key press
+            if pressed_keys[K_LEFT]:
+                  self.acc.x = -ACC
+            if pressed_keys[K_RIGHT]:
+                  self.acc.x = ACC 
+
+            # Formulas to calculate velocity while accounting for friction
+            self.acc.x += self.vel.x * FRIC
+            self.vel += self.acc
+            self.pos += self.vel + 0.5 * self.acc  # Updates Position with new values
+
+            # This causes character warping from one point of the screen to the other
+            if self.pos.x > WIDTH:
+                  self.pos.x = 0
+            if self.pos.x < 0:
+                  self.pos.x = WIDTH
+
+            self.rect.midbottom = self.pos  # Update rect with new pos
+
+      #player movement animation
       def update(self):
           
-          # Return to base frame if at end of movement sequence 
-          if self.move_frame > 6:
-                self.move_frame = 0
-                return
-          
-          # Move the character to the next frame if conditions are met 
-          if self.jumping == False and self.running == True:
-                
-                if self.vel.x > 0:
-                      self.image = run_ani_R[self.move_frame]
-                      self.direction = "RIGHT"
-                else:
-                      self.image = run_ani_L[self.move_frame]
-                      self.direction = "LEFT"
-                self.move_frame += 1
+            # Return to base frame if at end of movement sequence 
+            if self.move_frame > 6:
+                  self.move_frame = 0
+                  return
 
-          # Returns to base frame if standing still and incorrect frame is showing
-          if abs(self.vel.x) < 0.2 and self.move_frame != 0:
-                self.move_frame = 0
-                if self.direction == "RIGHT":
-                      self.image = run_ani_R[self.move_frame]
-                elif self.direction == "LEFT":
-                      self.image = run_ani_L[self.move_frame]
+            # Move the character to the next frame if conditions are met 
+            if self.jumping == False and self.running == True:
+                
+                  if self.vel.x > 0:
+                        self.image = run_ani_R[self.move_frame]
+                        self.direction = "RIGHT"
+                  else:
+                        self.image = run_ani_L[self.move_frame]
+                        self.direction = "LEFT"
+                  self.move_frame += 1
+
+            # Returns to base frame if standing still and incorrect frame is showing
+            if abs(self.vel.x) < 0.2 and self.move_frame != 0:
+                  self.move_frame = 0
+                  if self.direction == "RIGHT":
+                      
+                        self.image = run_ani_R[self.move_frame]
+                  elif self.direction == "LEFT":
+                        self.image = run_ani_L[self.move_frame]
+                      
+      
+
+      def gravity_check(self):
+            hits = pygame.sprite.spritecollide(player ,ground_group, False)
+            if self.vel.y > 0:
+                  if hits:
+                        lowest = hits[0]
+                        if self.pos.y < lowest.rect.bottom:
+                              self.pos.y = lowest.rect.top + 1
+                              self.vel.y = 0
+                              self.jumping = False
+      def jump(self):
+            
+            self.rect.x += 1
+
+            # Check to see if player is in contact with the ground
+            hits = pygame.sprite.spritecollide(self, ground_group, False)
+
+            self.rect.x -= 1
+
+            # If touching the ground, and not currently jumping, cause the player to jump.
+            if hits and not self.jumping:
+                  self.jumping = True 
+                  self.vel.y = -12
+
+      def player_hit(self):
+            if self.cooldown == False:      
+                  self.cooldown = True # Enable the cooldown
+                  pygame.time.set_timer(hit_cooldown, 1000) # Resets cooldown in 1 second
+
+                  self.health = self.health - 1
+                  health.image = health_ani[self.health]
+            
+                  if self.health <= 0: #take back to the surface and update status e.g. beat all 5 stages!
+                        
+                        player.upd = 'You died at stage ' + str(handler.stage) + 'in dungeon' 
+                        
+                        
+                        
+                        handler.enemy_count = 0
+                        handler.dead_enemy_count = 0
+                        handler.world = 0
+                        player.map == 1 #so player can perform skilling in that map
+                        handler.map1()  #so object sprites of the map renders
+                        #print(Enemies)
+                        self.health = 5
+                        health.image = health_ani[self.health]
+                        #self.pos.x = 130
+                        self.pos.y = 190
+                        player.move()
+                        
+                        pygame.display.update()
                       
       def attack(self):
             # If attack frame has reached end of sequence, return to base frame      
@@ -367,7 +465,29 @@ class Player(pygame.sprite.Sprite):
  
             # Update the current attack frame  
             self.attack_frame += 1
-
+            
+      def calattxp(self,a):
+            
+            self.totattxp += a
+            self.curattxp += a
+            
+            
+            for i,j in enumerate(self.xpcap):
+                  
+                  if self.xpcap[i] in self.atx:
+                        #print('true')
+                        continue
+                  elif self.curattxp >= self.xpcap[i]:
+                        self.atx.append(self.xpcap[i])
+                        
+                        self.curattxp = self.endattxp - self.xpcap[i]
+                        
+                        self.endattxp =  self.xpcap[i + 1]
+                        
+                        self.attlvl = self.lvls[i]
+                        player.lvlupd = 'You achieved level ' + str(self.attlvl) + ' attack!'
+                  break
+            
       def mine(self):
             # If attack frame has reached end of sequence, return to base frame      
             if self.mine_frame > 10:
@@ -454,16 +574,99 @@ class Player(pygame.sprite.Sprite):
                   self.pos.x -= 20
             if a == 10:
                   self.pos.x += 20
-
-
- 
-                   
                 
 class Enemy(pygame.sprite.Sprite):
       def __init__(self):
-        super().__init__()
+            super().__init__()
+            self.image = pygame.image.load(os.path.join('assets',"Enemy.png"))
+            self.rect = self.image.get_rect()     
+            self.pos = vec(0,0)
+            self.vel = vec(0,0)
+
+            self.direction = random.randint(0,1) # 0 for Right, 1 for Left
+            self.vel.x = random.randint(2,6) / 2  # Randomised velocity of the generated enemy
+
+            # Sets the intial position of the enemy  
+            if self.direction == 0:
+                  self.pos.x = 0
+                  self.pos.y = 340   #can make new enemies (arial) by changing y
+            if self.direction == 1:
+                  self.pos.x = 700
+                  self.pos.y = 340
 
 
+      def move(self):
+            
+        # Causes the enemy to change directions upon reaching the end of screen    
+            if self.pos.x >= (WIDTH-20):
+                  self.direction = 1
+            elif self.pos.x <= 0:
+                    self.direction = 0
+
+        # Updates positon with new values     
+            if self.direction == 0:
+                  self.pos.x += self.vel.x
+            if self.direction == 1:
+                  self.pos.x -= self.vel.x
+            
+            self.rect.center = self.pos # Updates rect
+               
+      def update(self):
+            # Checks for collision with the Player
+            hits = pygame.sprite.spritecollide(self, Playergroup, False)
+            pressed_keys = pygame.key.get_pressed()
+            #print("fff")
+
+            # Activates upon either of the two expressions being true
+            if (hits and player.attacking == True):
+                  player.calattxp(5)
+                  player.upd = 'You killed an enemy! + 5xp'
+                  print("Enemy Killed")
+                  self.kill()
+                  
+            
+
+            
+                   
+            #once the player died (hearts <=0), handler.world = 0 (surface), once that happens all enemies are cleared
+            elif handler.world != 1:
+                  self.kill()
+                  
+            # Escape the dungeon
+            elif pressed_keys[K_ESCAPE] and handler.world == 1:
+                  player.upd = 'Escaped dungeon at stage ' + str(handler.stage)
+                  handler.enemy_count = 0
+                  handler.world = 0
+                  player.map == 1 #so player can perform skilling in that map
+                  handler.map1()  #so object sprites of the map renders
+                  self.health = 5
+                  health.image = health_ani[self.health]
+                  #player.pos.x = 130
+                  player.pos.y = 190
+                  #self.jumping == False
+                  #self.running == True
+                  
+                  
+                  #change the vel so that the animation keep going
+            
+            
+                  handler.stage = 1
+                  self.kill()
+            
+
+            # If collision has occured and player not attacking, call "hit" function            
+            elif hits and player.attacking == False:
+                  player.upd = 'You got hit and lost a heart'
+                  player.player_hit()
+
+      
+                  
+      def render(self):
+            # Displayed the enemy on screen
+            window.blit(self.image, (self.pos.x, self.pos.y))
+
+      
+            
         
 class EventHandler():
       def __init__(self):
@@ -479,6 +682,7 @@ class EventHandler():
             self.stage_enemies = []
             for x in range(1, 21):
                   self.stage_enemies.append(int((x ** 2 / 2) + 1))
+                  #1,3,5,9,13,19
             
       def stage_handler(self):
             # Code for the Tkinter stage selection window
@@ -499,13 +703,24 @@ class EventHandler():
             self.root.mainloop()
       
       def world1(self):
+            self.world = 1
+            player.map == 0
             self.root.destroy()
             pygame.time.set_timer(self.enemy_generation, 2000)
-            #button.imgdisp = 1
-            ore.hide = True
+            
+            c_ore1.hide = True
+            c_ore2.hide = True
+            c_ore3.hide = True
+            s_ore1.hide = True
+            d_ore1.hide = True
             otree1.hide = True
+            otree2.hide = True
+            otree3.hide = True
+            wtree1.hide = True
+            mtree1.hide = True
             dungeon.hide = True
-            #self.battle = True
+            lake1.hide = True
+            self.battle = True
 
       def world2(self):
             self.root.destroy()
@@ -526,6 +741,29 @@ class EventHandler():
             self.battle = True
             button.imgdisp = 1
 
+            
+            
+      def next_stage(self):  # Code for when the next stage is clicked            
+            self.stage += 1
+            if self.stage == 7:
+                  handler.world = 0
+                  player.upd = 'Completed all 6 stages in dungeon!'
+                  self.enemy_count = 0
+                  self.world = 0
+                  player.map == 1 #so player can perform skilling in that map
+                  self.map1()  #so object sprites of the map renders
+                  self.health = 5
+                  health.image = health_ani[self.health]
+                  player.pos.x = 130
+                  player.pos.y = 190
+                  player.move()
+            else:      
+                  print("Stage: "  + str(self.stage))
+                  self.enemy_count = 0
+                  pygame.time.set_timer(self.enemy_generation, 1500 - (50 * self.stage))      
+
+
+
       def map1(self):
             
             #objects in map1
@@ -540,7 +778,7 @@ class EventHandler():
             wtree1.hide = False
             mtree1.hide = False
             dungeon.hide = False
-            #self.battle = True
+            lake1.hide = False
             
       def map2(self):
             
@@ -556,16 +794,35 @@ class EventHandler():
             wtree1.hide = True
             mtree1.hide = True
             dungeon.hide = True
-            #self.battle = True
+            lake1.hide = True
             
+            
+class HealthBar(pygame.sprite.Sprite):
+      def __init__(self):
+            super().__init__()
+            self.image = pygame.image.load(os.path.join('assets',"heart5.png"))
+
+      def render(self):
+            window.blit(self.image, (10,10))
 #Objects.
 #passing arguments changes the type of object and its position quickly
+intro_background = pygame.image.load(os.path.join('assets','skill stats.png'))
+
+Enemies = pygame.sprite.Group()
+player = Player()
+Playergroup = pygame.sprite.Group()
+Playergroup.add(player)
+
+hit_cooldown = pygame.USEREVENT + 1
 
 background = Background()
 ground = Ground()
+ground = Ground()
+ground_group = pygame.sprite.Group()
+ground_group.add(ground)
 
 #map 1 objects
-player = Player()
+
 c_ore1 = Ore('copper ore.png', 600, 450)
 c_ore2 = Ore('copper ore.png', 610, 410)
 c_ore3 = Ore('copper ore.png', 550, 460)
@@ -582,24 +839,50 @@ dungeon = Dungeon('dungeon.png', 100, 75)
 
 border = Border()
 handler = EventHandler()
+health = HealthBar()
 skills = Skills()
 status_bar = StatusBar()
 t = ''
 
+print('handler.stage is ' + str(handler.stage))
+print('handler.enemy_count is ' + str(handler.enemy_count))
+
+
 while True:
+      if handler.world == 1:
+            player.gravity_check()
+            player.dungeonmove()
       window.fill(GREEN)
       #window.blit(status_bar.surf, (675, 20))
+
+      if handler.world == 0:
+            handler.stage = 1
+            handler.enemy_count = 0
+            handler.dead_enemy_count = 0
+            
+            player.move()
+            
+            
       
       #start_time = get_current_time()
     #mouse = pygame.mouse.get_pos()
     
       for event in pygame.event.get():
-            start_time = pygame.time.get_ticks()
+            if event.type == hit_cooldown:
+                  player.cooldown = False
+            
             # Will run when the close window button is clicked    
             if event.type == QUIT:
                   pygame.quit()
                   sys.exit() 
-             
+            if event.type == handler.enemy_generation:
+                  if handler.enemy_count < handler.stage_enemies[handler.stage - 1]:
+                        #print(handler.enemy_count)
+                        #print(handler.stage_enemies[handler.stage - 1])
+                        enemy = Enemy()
+                        Enemies.add(enemy)
+                        handler.enemy_count += 1
+                  
             # For events that occur upon clicking the mouse (left click) 
             if event.type == pygame.MOUSEBUTTONDOWN:
                   pass
@@ -607,8 +890,21 @@ while True:
             # Event handling for a range of different key presses    
             if event.type == pygame.KEYDOWN:
 
+                  #if player presses n in dungeon, it moves onto the next stage
+                  if handler.world == 1:
+                        if event.key == pygame.K_n:
+                              if handler.battle == True and len(Enemies) == 0:
+                                    handler.next_stage()
+
+                                    
+                  if event.key == pygame.K_SPACE:
+                        player.jump()
+                  if event.key == pygame.K_RETURN:
+                        if player.attacking == False:
+                              player.attack()
+                              player.attacking = True 
                   
-                  #mining (use ors and ands)
+                  #mining 
                   
                   #copper ore
                   if event.key == pygame.K_q and player.map ==1 and 480 < player.rect.x < 650 and 345 < player.rect.y < 500:
@@ -702,6 +998,7 @@ while True:
       
       
       border.render()
+      
       player.update()
       
       if player.mining == True:     
@@ -713,8 +1010,26 @@ while True:
       if player.attacking == True:
             player.attack()
             
-      player.move()
-      #background.render()
+##      if handler.world == 1:
+##            player.dungeonmove() #if in dungeon, include jumping and acceleration
+##      else:
+##            player.move()
+
+      
+      
+      if handler.world == 1:
+            background.render()
+            ground.render()
+            if player.health > 0:
+                  window.blit(player.image, player.rect)
+            health.render()
+
+      for entity in Enemies:
+          entity.update()
+          entity.move()
+          entity.render()
+      
+      
       c_ore2.update()
       c_ore1.update()
       

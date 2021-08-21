@@ -1,8 +1,6 @@
-#iteration6:
-#created menu screen
-#players can login 
-#created new solution for calculating level and experience
-#player can enter a house
+#iteration7:
+#created signup screen, highscores and instructions in menu
+#created tower defence minigame (in my_tower_defence_minigame folder)
 
 import pygame
 from pygame.locals import *
@@ -12,6 +10,11 @@ import random
 import time
 from tkinter import filedialog
 from tkinter import *
+import importlib
+
+from my_tower_defence_minigame import enemies, images, maps, towers
+from my_tower_defence_minigame import my_sea_tower_defence_minigame
+
 
 pygame.init()  # Begin pygame
  
@@ -33,19 +36,11 @@ COUNT = 0
 window = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Skill-Topia")
 
-# light shade of the button 
-color_light = (170,170,170)
-color_dark = (100,100,100)
-color_white = (255,255,255) 
-
 # defining a font
-headingfont = pygame.font.SysFont("Verdana", 40)
 regularfont = pygame.font.SysFont('Corbel',25)
 smallerfont = pygame.font.SysFont('Corbel',16)
 tinyfont = pygame.font.SysFont('Corbel',11) 
 
-
-#skills = {'attack':{'lvl':1,'xp':0},'mining':{'lvl':1,'xp':0},'fishing':{'l':1,'xp':0},'woodcutting':{'lvl':1,'xp':0}}
 
 # Run animation for the RIGHT
 run_ani_R = [pygame.image.load(os.path.join('assets',"Player_Sprite_R.png")), pygame.image.load(os.path.join('assets',"Player_Sprite2_R.png")),
@@ -89,33 +84,7 @@ fountain_ani = [pygame.image.load(os.path.join('assets',"fountain1.png")), pygam
 
 # Animations for the teddy inside house in Map 1
 teddy_ani = [pygame.image.load(os.path.join('assets',"teddy1.png")), pygame.image.load(os.path.join('assets',"teddy2.png"))]
-
-class Background(pygame.sprite.Sprite):
-      def __init__(self):
-            super().__init__()
-            self.bgimage = pygame.image.load(os.path.join('assets','Background.png'))        
-            self.bgY = 0
-            self.bgX = 0
- 
-      def render(self):
-            window.blit(self.bgimage, (self.bgX, self.bgY))     
- 
-# ground class when entering the dungeon
-class Ground(pygame.sprite.Sprite):
-    def __init__(self, a,b):#,c,d):
-        super().__init__()
-        self.x = int(a)
-        self.y = int(b)
-        #self.w = int(c)
-        #self.h = int(d)
-        self.image = pygame.image.load(os.path.join('assets',"Ground.png"))
-        #self.image = pygame.transform.scale(self.image, (self.w,self.h))
-        self.rect = self.image.get_rect(center = (450, 450))
-        
-
-    def render(self):
-        window.blit(self.image, (self.x, self.y))
-
+       
 
 #border class to split the skilltopia surface with the status and skills box
 class Border(pygame.sprite.Sprite):
@@ -141,36 +110,44 @@ class Skills(pygame.sprite.Sprite):
           
           window.blit(self.image, (self.rect.x, self.rect.y))
           
-          text = regularfont.render('Skill Stats', True , color_white)
+          text = regularfont.render('Skill Stats', True , WHITE)
           window.blit(text, (700, 170))
           
           #text, will keep getting updated after every tick
           #mining
-          text = smallerfont.render('mining', True , color_white)
+          text = smallerfont.render('mining', True , WHITE)
           window.blit(text, (700, 200))
-          text = tinyfont.render('lvl: ' + str(player.minelvl), True , color_white)
+          text = tinyfont.render('lvl: ' + str(player.minelvl), True , WHITE)
           window.blit(text, (700, 215))
-          text = tinyfont.render('xp: ' + str(player.curminexp) + '/' + str(player.endminexp), True , color_white)
+          text = tinyfont.render('xp: ' + str(player.curminexp) + '/' + str(player.endminexp), True , WHITE)
           window.blit(text, (700, 230))
           
-          #text = tinyfont.render('tot: ' + str(player.totminexp) , True , color_white)    #for highscores
+          #text = tinyfont.render('tot: ' + str(player.totminexp) , True , WHITE)    #for highscores
           #window.blit(text, (700, 245))
           
           #woodcutting
-          text = smallerfont.render('wdcutting', True , color_white)
-          window.blit(text, (800, 200))
-          text = tinyfont.render('lvl: ' + str(player.wcutlvl), True , color_white)
-          window.blit(text, (800, 215))
-          text = tinyfont.render('xp: ' + str(player.curwcutxp) + '/' + str(player.endwcutxp), True , color_white)
-          window.blit(text, (800, 230))
+          text = smallerfont.render('woodcutting', True , WHITE)
+          window.blit(text, (760, 200))
+          text = tinyfont.render('lvl: ' + str(player.wcutlvl), True , WHITE)
+          window.blit(text, (760, 215))
+          text = tinyfont.render('xp: ' + str(player.curwcutxp) + '/' + str(player.endwcutxp), True , WHITE)
+          window.blit(text, (760, 230))
 
           #attack
-          text = smallerfont.render('attack', True , color_white)
+          text = smallerfont.render('attack', True , WHITE)
           window.blit(text, (700, 260))
-          text = tinyfont.render('lvl: ' + str(player.attlvl), True , color_white)
+          text = tinyfont.render('lvl: ' + str(player.attlvl), True , WHITE)
           window.blit(text, (700, 275))
-          text = tinyfont.render('xp: ' + str(player.curattxp) + '/' + str(player.endattxp), True , color_white)
+          text = tinyfont.render('xp: ' + str(player.curattxp) + '/' + str(player.endattxp), True , WHITE)
           window.blit(text, (700, 290))
+
+          #attack
+          text = smallerfont.render('tower-defence', True , WHITE)
+          window.blit(text, (760, 260))
+          text = tinyfont.render('lvl: ' + str(player.tdeflvl), True , WHITE)
+          window.blit(text, (760, 275))
+          text = tinyfont.render('xp: ' + str(player.curtdefxp) + '/' + str(player.endtdefxp), True , WHITE)
+          window.blit(text, (760, 290))
 
 
           
@@ -222,20 +199,6 @@ class Tree(pygame.sprite.Sprite):
             if self.hide == False:
                   window.blit(self.image, (self.rect.x, self.rect.y))
 
-#--Will introduction fishing skill in later iterations--
-                  
-##class Lake(pygame.sprite.Sprite):
-##      
-##      def __init__(self, lakename, posx, posy):
-##            super().__init__()
-##            self.hide = False
-##            image = pygame.image.load(os.path.join('assets',lakename))
-##            self.image = pygame.transform.scale(image, (210,200))
-##            self.rect = self.image.get_rect(center = (posx, posy))
-##
-##      def update(self):
-##            if self.hide == False:
-##                  window.blit(self.image, (self.rect.x, self.rect.y))
 
 #fountain class displays a fountain and the animation
 class Fountain(pygame.sprite.Sprite):
@@ -305,7 +268,7 @@ class Teddy(pygame.sprite.Sprite):
                   window.blit(self.image, (self.x, self.y))
                   self.move_frame += 1
                   
-#teddy class displays in a happy state 
+#teddy class displays in a neutral state 
 class teddyStill(pygame.sprite.Sprite):
       def __init__(self):
             self.x = 180
@@ -332,6 +295,34 @@ class teddyStill(pygame.sprite.Sprite):
                   window.blit(self.image, (self.x, self.y))
                   self.move_frame += 1
 
+
+# background class when entering the dungeon
+class Background(pygame.sprite.Sprite):
+      def __init__(self):
+            super().__init__()
+            self.bgimage = pygame.image.load(os.path.join('assets','Background.png'))        
+            self.bgY = 0
+            self.bgX = 0
+ 
+      def render(self):
+            window.blit(self.bgimage, (self.bgX, self.bgY))     
+ 
+# ground class when entering the dungeon
+class Ground(pygame.sprite.Sprite):
+    def __init__(self, a,b):#,c,d):
+        super().__init__()
+        self.x = int(a)
+        self.y = int(b)
+        #self.w = int(c)
+        #self.h = int(d)
+        self.image = pygame.image.load(os.path.join('assets',"Ground.png"))
+        #self.image = pygame.transform.scale(self.image, (self.w,self.h))
+        self.rect = self.image.get_rect(center = (450, 450))
+        
+    def render(self):
+        window.blit(self.image, (self.x, self.y))
+        
+
 #dungeon class displays the dungeon
 class Dungeon(pygame.sprite.Sprite):
       
@@ -339,7 +330,7 @@ class Dungeon(pygame.sprite.Sprite):
             super().__init__()
             self.hide = False
             image = pygame.image.load(os.path.join('assets',dname))
-            self.image = pygame.transform.scale(image, (140,130))
+            self.image = pygame.transform.scale(image, (140,140))
             self.rect = self.image.get_rect(center = (posx, posy))
 
       def update(self):
@@ -352,8 +343,8 @@ class Dungeon(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
 
       #initalises the skill levels and experience      
-      def __init__(self,a,b,c,d,e,f,g,h,i):
-            #parameters totalminexp,curminexp,minelvl,totwcutxp,curwcutxp,wcutlvl,totattxp,curattxp,attlvl
+      def __init__(self,a,b,c,d,e,f,g,h,i,j,k,l):
+            #parameters totalminexp,curminexp,minelvl,totwcutxp,curwcutxp,wcutlvl,totattxp,curattxp,attlvl,tottdefxp,curtdefxp,tdeflvl
             
             super().__init__()
             self.image = pygame.image.load(os.path.join('assets',"Player_Sprite_R.png"))
@@ -407,13 +398,19 @@ class Player(pygame.sprite.Sprite):
             self.endattxp = self.xpcap[int(i)-1]
             self.attlvl = int(i)
             self.atx = []
+            
             self.immune = False
             self.special = False
             self.experiance = 0
             self.cooldown = False
             self.health = 5
-            self.magic_cooldown = 1
-            self.mana = 0
+
+            self.tottdefxp = int(j)
+            self.curtdefxp = int(k)
+            self.endtdefxp = self.xpcap[int(l)-1]
+            self.tdeflvl = int(l)
+            self.tdx = []
+
 
 
       #player move function
@@ -623,24 +620,6 @@ class Player(pygame.sprite.Sprite):
                   self.minelvl = 15
                   player.lvlupd = "Already max mining lvl"
                   
-            #old solution (not time efficient)
-                  
-##            for i,j in enumerate(self.xpcap):
-##                  
-##                  if self.xpcap[i] in self.mx:
-##                        #print('true')
-##                        continue
-##                  elif self.curminexp >= self.xpcap[self.minelvl -1]:
-##                        self.mx.append(self.xpcap[i])
-##                        
-##                        self.curminexp = self.endminexp - self.xpcap[self.minelvl - 1]
-##                        
-##                        self.endminexp =  self.xpcap[self.minelvl]
-##                        
-##                        self.minelvl += self.lvls[i] - 1 #if loaded lvl was 3, when levling up: 3 + 2 - 1 = lvl4
-##                                                         #note to self: might add 1 to self.lvls and to self.lvls[i+1]
-##                        player.lvlupd = 'You achieved level ' + str(self.minelvl) + ' in mining!'
-##                  break
                   
       #for woodcutting animation
       def wcut(self):
@@ -835,6 +814,7 @@ class EventHandler():
             self.battle = False
             self.enemy_generation = pygame.USEREVENT + 2
             self.enemy_generation2 = pygame.USEREVENT + 3
+            self.skilltopia_surface = True
             self.stage = 1
             self.money = 0
             self.world = 0
@@ -844,7 +824,8 @@ class EventHandler():
             for x in range(1, 21):
                   self.stage_enemies.append(int((x ** 2 / 2) + 1))
                   #1,3,5,9,13,19
-            
+
+      #Prompts the user if they want to enter the dungeon (Tkinter)
       def stage_handler(self):
             # Code for the Tkinter stage selection window
             self.root = Tk()
@@ -852,24 +833,18 @@ class EventHandler():
             
             button1 = Button(self.root, text = "Enter Dungeon", width = 18, height = 2,
                             command = self.world1)
-            #button2 = Button(self.root, text = "Skyward Dungeon", width = 18, height = 2,
-            #                command = self.world2)
-            #button3 = Button(self.root, text = "Hell Dungeon", width = 18, height = 2,
-            #                command = self.world3)
-             
+            #button2 = Button(self.root, text = "sky monsters dungeon", width = 18, height = 2,
+            #                command = self.world2) => #later iterations
+            
             button1.place(x = 40, y = 15)
             #button2.place(x = 40, y = 65)
-            #button3.place(x = 40, y = 115)
             
             self.root.mainloop()
-
-      def house_handler(self):
-            # Entering house tkinter
             
-            # create the tkinter window
+      #Prompts the user if they want to enter the house (Tkinter)
+      def house_handler(self):
             self.root = Tk()
-            self.root.title("House.")                  
-            #self.root.geometry('400x170')
+            self.root.title("House.")
 
             inLabel = Label(self.root, text="You feel an ominous presence from the house.")
             inLabel.grid(row=0,column=0)
@@ -884,13 +859,10 @@ class EventHandler():
 
             self.root.mainloop()
 
-      def towerdef_handler(self):
-            # Entering house tkinter
-            
-            # create the tkinter window
+      #Prompts the user if they want to play the tower defence minigame (Tkinter)
+      def towerdef_handler(self):            
             self.root = Tk()
             self.root.title("Tower defence minigame menu.")                  
-            #self.root.geometry('400x170')
 
             inLabel = Label(self.root, text="Do you want to play Tower Defence minigame?", font=2)
             inLabel.grid(row=0,column=0)
@@ -898,12 +870,105 @@ class EventHandler():
             inLabel2.grid(row=1,column=0)
 
             # enter button
-            enterButton = Button(self.root, text="  Yes  ", fg="black", command=self.house1) 
+            enterButton = Button(self.root, text="  Yes  ", fg="black", command=self.entertowerdef) 
             enterButton.grid(row=3, column=0, padx=5, pady=5)
+
+            self.root.mainloop()                
+            
+      #Tkinter window that displays the entries to register a Skill-Topia Account
+      def signup_handler(self):
+            import tkinter as tk
+            self.root = Tk()
+            self.root.title("Creating Skill-Topia Account.")                  
+            
+            #makes sures the users entries are sufficient for a username and password
+            def output():
+                  with open('playerdatabase.txt') as f:
+                        user = str(textEntry.get())
+                        msg = 'username is good'
+                        if len(user) >= 12:
+                              msg = 'username should be less than 12 char'
+                        else:
+                              for i in f:                             
+                                    l = i.strip().split(',')
+                                    if user == str(l[0]):
+                                          msg =  'username already taken'
+                       
+                        passw = str(textEntry2.get())
+                        confirm_passw = str(textEntry3.get())
+                        passchar = [i for i in passw]
+                        if passw != confirm_passw:
+                              msg2 = 'passwords does not match'
+                        elif len(passw) <6:
+                              msg2 = 'password needs at least 6 characters'
+                        elif set(['1','2','3','4','5','6','7','8','9','0']) & set(passchar) == set():
+                              msg2 = 'password needs at least 1 digit'
+                        else:
+                              msg2 = 'password is good'
+
+                        outLabel.configure(text=msg)
+                        outLabel2.configure(text=msg2)
+
+                        if msg == 'username is good' and msg2 == 'password is good':
+                              outLabel.configure(text='')
+                              outLabel2.configure(text='')
+                              outLabel3.configure(text='Account created, Welcome ' + str(user)+'!')
+                              with open('playerdatabase.txt','a') as f:
+                                    f.write('\n'+str(user)+','+str(passw)+',0,0,1,0,0,1,0,0,1')
+
+
+            # ===== header frame
+            header_frame = tk.Frame(self.root, relief=tk.SUNKEN, borderwidth=2)
+            header_frame.pack(padx=200,pady=20)
+            headerLabel = tk.Label(header_frame, text = "Creating account", font=20)       #font=("Georgia", 13) to change font name
+            headerLabel.grid()
+
+            # ===== input frame
+            input_frame = tk.Frame(self.root)
+            input_frame.pack()
+
+            # text and text entries
+            inLabel = Label(input_frame, text="Username: ", font=11)
+            inLabel.grid(row=0,column=0)
+
+            textEntry = Entry(input_frame,text="",width=15)
+            textEntry.grid(row=0,column=1)
+
+            inLabel2 = Label(input_frame, text="Password: ", font=11)
+            inLabel2.grid(row=2,column=0)
+
+            textEntry2 = Entry(input_frame,text="",width=15)
+            textEntry2.grid(row=2,column=1)
+
+            inLabel3 = Label(input_frame, text="Confirm password: ", font=11)
+            inLabel3.grid(row=3,column=0)
+
+            textEntry3 = Entry(input_frame,text="",width=15)
+            textEntry3.grid(row=3,column=1)
+
+            #message if valid username
+            outLabel = Label(input_frame, text='', font=11)
+            outLabel.grid(row=1, column=1)
+
+            #message if valid password
+            outLabel2 = Label(input_frame, text='', font=11)
+            outLabel2.grid(row=4, column=1)
+
+            # ===== output frame
+            output_frame = tk.Frame(self.root)
+            output_frame.pack()
+
+            #message to confirm account is created
+            outLabel3 = Label(output_frame, text='', font=11)
+            outLabel3.pack()
+
+            # enter button
+            enterButton = Button(output_frame, text="  Sign Up  ", fg="black", command=output) 
+            enterButton.pack(pady=10)
 
             self.root.mainloop()
 
-            
+      # when the player enters the dungeon
       def world1(self):
             self.root.destroy()
             self.world = 1
@@ -922,13 +987,12 @@ class EventHandler():
             wtree1.hide = True
             mtree1.hide = True
             dungeon.hide = True
-            #lake1.hide = True
             fountain.hide = True
             main_tower.hide = True
             teddy.hide = True
             self.battle = True
             
-      
+      # when the player enters the house
       def house1(self):
             self.root.destroy()
             #print('accessed house')
@@ -945,11 +1009,17 @@ class EventHandler():
             wtree1.hide = True
             mtree1.hide = True
             dungeon.hide = True
-            #lake1.hide = True
             fountain.hide = True
             main_tower.hide = True
             teddy.hide = False
             #self.battle = True
+            
+      #pauses main loop to play the tower defence minigame
+      def entertowerdef(self):
+            self.root.destroy()
+            self.skilltopia_surface = False
+
+            
 
             
       def next_stage(self):  # Code for when the next stage is clicked            
@@ -990,7 +1060,6 @@ class EventHandler():
             fountain.hide = False
             teddy.hide = True
             dungeon.hide = False
-            #lake1.hide = False
 
       #note to self: have objects in an array and use for loop to hide them
       def map2(self):
@@ -1008,10 +1077,8 @@ class EventHandler():
             wtree1.hide = True
             mtree1.hide = True
             fountain.hide = True
-            
             teddy.hide = True
             dungeon.hide = True
-            #lake1.hide = True
 
       def map3(self):
             
@@ -1033,7 +1100,7 @@ class EventHandler():
             #lake1.hide = True
             
             
-            
+#The health bar for the dungeon minigame
 class HealthBar(pygame.sprite.Sprite):
       def __init__(self):
             super().__init__()
@@ -1042,6 +1109,7 @@ class HealthBar(pygame.sprite.Sprite):
       def render(self):
             window.blit(self.image, (10,10))
 
+#class to create map objects to be displayed when player move to the edge of a continuing path
 class MapImg(pygame.sprite.Sprite):
       def __init__(self,a):
             super().__init__()
@@ -1109,17 +1177,15 @@ class InputBox:
 
     def __init__(self, x, y, w, h, text=''):
         self.rect = pygame.Rect(x, y, w, h)
-        self.color = COLOR_INACTIVE
+        self.colour = COLOUR_INACTIVE
         self.text = text
-        self.txt_surface = FONT.render(text, True, self.color)
+        self.txt_surface = FONT.render(text, True, self.colour)
         self.active = False
 
     def handle_event(self, event):
           
           if event.type == pygame.MOUSEBUTTONDOWN:
-                
-                
-                 
+
             # If the user clicked on the input_box rect.
                 if self.rect.collidepoint(event.pos):
                 # Toggle the active variable.
@@ -1127,8 +1193,8 @@ class InputBox:
                 else:
                     self.active = False
                 
-            # Change the current color of the input box.
-                self.color = COLOR_ACTIVE if self.active else COLOR_INACTIVE
+            # Change the current colour of the input box.
+                self.colour = COLOUR_ACTIVE if self.active else COLOUR_INACTIVE
           if event.type == pygame.KEYDOWN:
                 
                 
@@ -1141,7 +1207,7 @@ class InputBox:
                     else:
                         self.text += event.unicode
                 # Re-render the text.
-                    self.txt_surface = FONT.render(self.text, True, self.color)
+                    self.txt_surface = FONT.render(self.text, True, self.colour)
 
     def update(self):
           
@@ -1153,17 +1219,17 @@ class InputBox:
         # Blit the text.
           window.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
         # Blit the rect.
-          pygame.draw.rect(window, self.color, self.rect, 2)
+          pygame.draw.rect(window, self.colour, self.rect, 2)
 
 
 #window = pygame.display.set_mode((640, 480))
-COLOR_INACTIVE = pygame.Color('ghostwhite')
-COLOR_ACTIVE = pygame.Color('grey7')
+COLOUR_INACTIVE = pygame.Color('ghostwhite')
+COLOUR_ACTIVE = pygame.Color('grey7')
 FONT = pygame.font.Font(None, 32)
 PETALSPAWN = pygame.USEREVENT + 2
 pygame.time.set_timer(PETALSPAWN, 500)
-#start_music = pygame.mixer.Sound(os.path.join('audio',"soundtrack1.mp3"))
-#ingamemusic = pygame.mixer.Sound(os.path.join('audio',"soundtrack2.mp3"))
+start_music = pygame.mixer.Sound(os.path.join('audio',"airtone_-_timebeing_1.mp3"))
+ingamemusic = pygame.mixer.Sound(os.path.join('audio',"doxent_-_Forgotten_Land.mp3"))
 
 #Objects.
 #passing arguments changes the type of object and its position quickly
@@ -1174,18 +1240,13 @@ input_box2 = InputBox(650, 150, 140, 32)
 input_boxes = [input_box1, input_box2]
     
 Enemies = pygame.sprite.Group()
-#player = Player(0,0,1,0,0,1,0,0,1)
-#Playergroup = pygame.sprite.Group()
-#Playergroup.add(player)
 
 hit_cooldown = pygame.USEREVENT + 1
 
 background = Background()
-ground = Ground(0,390)#,WIDTH, 390)
-#ground2 = Ground(0,0)#, 250,300)
+ground = Ground(0,390)
 ground_group = pygame.sprite.Group()
 ground_group.add(ground)
-#ground_group.add(ground2)
 map1img = MapImg('map1.png')
 map2img = MapImg('map2.png')
 map3img = MapImg('map3.png')
@@ -1199,14 +1260,14 @@ c_ore1 = Ore('copper ore.png', 600, 450)
 c_ore2 = Ore('copper ore.png', 610, 410)
 c_ore3 = Ore('copper ore.png', 550, 460)
 s_ore1 = Ore('silver ore.png', 460, 400)
-d_ore1 = Ore('diamond ore.png', 35, 150)
+d_ore1 = Ore('diamond ore.png', 40, 110)
 otree1 = Tree('oak tree.png',590,80)
 otree2 = Tree('oak tree.png',550,130)
 otree3 = Tree('oak tree.png',330,430)
 wtree1 = Tree('willow tree.png',240,410)
 mtree1 = Tree('maple tree.png',200,40)
 #lake1 = Lake('lake2.png',90,400)
-dungeon = Dungeon('dungeon.png', 60, 20)
+dungeon = Dungeon('dungeon.png', 70, 30)
 house1img = MapImg('house room1.png')
 main_tower = MainTower('main tower.png',260,310)
 
@@ -1218,27 +1279,28 @@ skills = Skills()
 status_bar = StatusBar()
 
 #button on the intro screen
-play_button = Button2(650,290,150,50,WHITE, BLACK, 'Play as guest',32)
-login_button = Button2(650,200,100,50,WHITE, BLACK, 'Login',32)
+login_button = Button2(650,200,100,40,WHITE, BLACK, 'Login',32)
+signup_button = Button2(760,200,100,40,WHITE, BLACK, 'Sign-up',32)
+play_button = Button2(680,250,150,40,WHITE, BLACK, 'Play as guest',32)
+instructions_button = Button2(680,300,150,40,WHITE, BLACK, 'Instructions',32)
+highscores_button = Button2(680,350,150,40,WHITE, BLACK, 'Highscores',32)
 
-
-
-def create_player(a,b,c,d,e,f,g,h,i):
+# creates a player if user logs in or plays as a guest
+def create_player(a,b,c,d,e,f,g,h,i,j,k,l):
       global player
       global Playergroup
-      player = Player(a,b,c,d,e,f,g,h,i)
+      player = Player(a,b,c,d,e,f,g,h,i,j,k,l)
       Playergroup = pygame.sprite.Group()
       Playergroup.add(player)
       
-
-#start_music.play()
-#ingamemusic.play()
+start_music.play()
+ingamemusic.play()
 
 #The intro/menu screen
 def intro_screen():
       intro = True
-      #ingamemusic.set_volume(.0)
-      #start_music.set_volume(.2)
+      ingamemusic.set_volume(.0)
+      start_music.set_volume(.2)
 
       menu_petal = pygame.sprite.Group()
 
@@ -1272,7 +1334,7 @@ def intro_screen():
                         hide = True
                         global guest
                         guest = True
-                        create_player(0,0,1,0,0,1,0,0,1)
+                        create_player(0,0,1,0,0,1,0,0,1,0,0,1)
                   
                   if login_button.is_pressed(mouse_pos,mouse_pressed):
                         print('login pressed')
@@ -1288,26 +1350,44 @@ def intro_screen():
                                     hide = True
                                     
                                     guest = False
-                                    create_player(l[2],l[3],l[4],l[5],l[6],l[7],l[8],l[9],l[10])
+                                    create_player(l[2],l[3],l[4],l[5],l[6],l[7],l[8],l[9],l[10],l[11],l[12],l[13])
                                     
-                  
+                  if signup_button.is_pressed(mouse_pos,mouse_pressed):
+                        handler.signup_handler()
+
+                  #when hide == True the menu screen will stop being drawn on the screen
                   if hide == False:
+                        
                         window.blit(intro_background, (0,0))
 
                         menu_petal.draw(window)
-                        menu_petal.update()                              
+                        menu_petal.update()
+                        
                         for box in input_boxes:
                               box.update()
-                        #window.fill((130, 130, 130))
                         for box in input_boxes:
                               box.draw(window)
                         
                         window.blit(usertext,user_rect)
                         window.blit(passtext,pass_rect)
-                        window.blit(play_button.image,play_button.rect)
+
                         window.blit(login_button.image,login_button.rect)
+                        window.blit(signup_button.image,signup_button.rect)
+                        window.blit(play_button.image,play_button.rect)
+                        window.blit(instructions_button.image,instructions_button.rect)
+                        window.blit(highscores_button.image,highscores_button.rect)
+
+                        #hover mouse over the audio button to show audio credits
+                        audio_button = pygame.image.load(os.path.join('assets',"audio button.png"))
+                        audio_button = pygame.transform.scale(audio_button, (60,60))
+                        window.blit(audio_button,(830,400))
+                        audio_rect = audio_button.get_rect(x=830,y=400)
+                        mpos = pygame.mouse.get_pos()
+                        if audio_rect.collidepoint(mpos):
+                              audiocred = pygame.image.load(os.path.join('audio',"audio credits image.png"))
+                              audiocred = pygame.transform.scale(audiocred, (263,313))
+                              window.blit(audiocred,(630,76))
                         
-                       
                         
                   FPS_CLOCK.tick(FPS)
                   pygame.display.update()
@@ -1315,27 +1395,39 @@ def intro_screen():
                   
 
 def main():
+      #plays game music and mutes menu music
+      start_music.set_volume(.0)
+      ingamemusic.set_volume(.05)
       
-      #start_music.set_volume(.0)
-      #ingamemusic.set_volume(.2)
+      skilltopia_surface = True
       
-      while True:
-                       
+      while skilltopia_surface == True:
+            
+            window = pygame.display.set_mode((WIDTH, HEIGHT))
+            pygame.display.set_caption("Skill-Topia")
+
+            if handler.skilltopia_surface == False:
+                  my_sea_tower_defence_minigame.main_towerdef()
+                  if my_sea_tower_defence_minigame.gameover == True:
+                        handler.skilltopia_surface = True                     
+            
+            #displays the map and any animations in it e.g. water fountain
             if player.map == 1:
                   map1img.render()
                   image1 = pygame.image.load(os.path.join('assets',"fountain1.png"))
                   image1 = pygame.transform.scale(image1, (800,400))
                   window.blit(image1, (30, 20))
+                  
             elif player.map == 2:
                   map2img.render()
+                  
             elif player.map ==3:
                   map3img.render()
             
             if handler.world == 1:
                   player.gravity_check()
                   player.dungeonmove()
-            
-            #window.blit(status_bar.surf, (675, 20))
+
             
             if handler.world == 0:
                   handler.stage = 1
@@ -1344,10 +1436,6 @@ def main():
                   
                   player.move()
                   
-                  
-            
-            #start_time = get_current_time()
-          #mouse = pygame.mouse.get_pos()
           
             for event in pygame.event.get():
                   if event.type == hit_cooldown:
@@ -1359,8 +1447,6 @@ def main():
                         sys.exit() 
                   if event.type == handler.enemy_generation:
                         if handler.enemy_count < handler.stage_enemies[handler.stage - 1]:
-                              #print(handler.enemy_count)
-                              #print(handler.stage_enemies[handler.stage - 1])
                               enemy = Enemy()
                               Enemies.add(enemy)
                               handler.enemy_count += 1
@@ -1428,8 +1514,10 @@ def main():
                                           
                                           player.mine()
                                           player.mining = True
+                                          
 
-                        #trees                 
+                        #trees
+                                          
                         #oak tree
                         if event.key == pygame.K_q and player.map ==1 and ((480 < player.rect.x < 650 and 20 < player.rect.y < 160)or(270 < player.rect.x < 360 and 360 < player.rect.y < HEIGHT)):
                               rand_num = random.uniform(1,100)
@@ -1477,21 +1565,21 @@ def main():
                               handler.stage_handler()
 
                         #to play tower defence minigame           
-                        if event.key == pygame.K_q and player.map == 1 and 260< player.rect.x < 310 and 260< player.rect.y < 350:
+                        if event.key == pygame.K_q and player.map == 1 and 210< player.rect.x < 280 and 220< player.rect.y < 340:
                               
                               handler.towerdef_handler()
 
                         #to enter house1 (in map1)
-                        if event.key == pygame.K_q and player.map == 1 and 480 < player.rect.x < 650 and 230 < player.rect.y < 330:
-                              
+                        if event.key == pygame.K_q and player.map == 1 and 480 < player.rect.x < 630 and 170 < player.rect.y < 300:
+                              player.upd = "Entered 'the house'."
                               handler.house_handler()
                               
                         #to go back to menu screen
                         if event.key == pygame.K_b:
                               
                               intro_screen()
-                              #start_music.set_volume(.0)
-                              #ingamemusic.set_volume(.05)
+                              start_music.set_volume(.0)
+                              ingamemusic.set_volume(.05)
                         
                          
             border.render()
@@ -1507,8 +1595,7 @@ def main():
             if player.attacking == True:
                   player.attack()
                   
-           
-            
+
             if handler.world == 1:
                   background.render()
                   ground.render()
@@ -1539,11 +1626,8 @@ def main():
             otree3.update()
             wtree1.update()
             mtree1.update()
-            #lake1.update()
             fountain.update()
-            teddy.update()
-
-                  
+            teddy.update()     
             skills.render()
             status_bar.update()
             
@@ -1559,8 +1643,8 @@ def main():
                         for i in f:
                               l = i.strip().split(',')
                               if str(l[0]) == username and str(l[1]) == password:
-                                    playerdatabase[line] = str(username)+','+str(password)+','+str(player.totminexp)+','+str(player.curminexp)+','+str(player.minelvl)+','+str(player.totwcutxp)+','+str(player.curwcutxp)+','+str(player.wcutlvl)+','+str(player.totattxp)+','+str(player.curattxp)+','+str(player.attlvl)
-                                    with open("playerdatabase.txt",'w') as g:
+                                    playerdatabase[line] = str(username)+','+str(password)+','+str(player.totminexp)+','+str(player.curminexp)+','+str(player.minelvl)+','+str(player.totwcutxp)+','+str(player.curwcutxp)+','+str(player.wcutlvl)+','+str(player.totattxp)+','+str(player.curattxp)+','+str(player.attlvl)+','+str(player.tottdefxp)+','+str(player.curtdefxp)+','+str(player.tdeflvl)
+                                    with open("playerdatabase.txt",'w') as g:                                                                                                                                                                                                                                               
                                           g.writelines(playerdatabase)
                               line+=1
 

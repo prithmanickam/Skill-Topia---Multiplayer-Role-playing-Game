@@ -1,2 +1,2 @@
 theusername,thepassword,totalminexp,curminexp,minelvl,totwcutxp,curwcutxp,wcutlvl,totattxp,curattxp,attlvl
-username1,password1,80,10,4,25,15,2,0,0,1
+username1,password1,80,10,4,25,15,2,5,5,1,0,0,1

@@ -1,4 +1,4 @@
-# Skill-topia---Multiplayer-Roleplaying-Game
+# Skill-Topia – Mulitplayer Role-playing Game
 
 ## Video Gameplay
 
@@ -17,22 +17,21 @@ https://user-images.githubusercontent.com/53788322/130368134-e4100eeb-6bbc-41d7-
 
 ## Description and controls
 ### Menu Screen
-- User can 'Sign-up' to create a Skill-Topia account, where username and password details are stored on playerdatabase.txt,
-<img src="https://user-images.githubusercontent.com/53788322/130360693-14eb5436-b224-4bc4-abec-ae6f88571d9c.png" width="360" height="210" /> <img src="https://user-images.githubusercontent.com/53788322/130361047-c6ac2d7b-4b6e-45fe-8452-635f1e3bd446.PNG" width="360" height="55" />
-- Once an account is made users can log on and play. When the user closes the client, their levels and experience will be saved when the log back on.
+- User can 'Sign-up' to create a Skill-Topia account, where username and password details are stored on playerdatabase.txt. <img src="https://user-images.githubusercontent.com/53788322/130360693-14eb5436-b224-4bc4-abec-ae6f88571d9c.png" width="360" height="210" /> <img src="https://user-images.githubusercontent.com/53788322/130361047-c6ac2d7b-4b6e-45fe-8452-635f1e3bd446.PNG" width="360" height="55" />
+- Once an account is made users can log on and play. When the user closes the client, their levels and experience will be saved when they log back on.
 - User can 'Play as a Guest', which allows them to play as a new player but when the user closes the client, their levels and experience will not be saved.
-- Instructions and highscores can be viewed in the Menu screen.
+- Instructions and highscores can be viewed in the menu screen.
 - Credits of music assets can be viewed by hovering mouse over audio button.
 ### Skill-Topia Surface
-- Player moves around large map, using `Arrow keys`, to play various of minigames, gaining experience to level up skills.
-- The experience cap to reach the next level increased with each level e.g. 10xp -> lvl2, 20xp -> lvl3.
-- Surface skill are 'Mining' and 'Woodcutting' which can be perform whem standing next to the object and pressing `q`.
-- Some objects objects require player to have a certain level to skill e.g. You can mine silver at lvl 5 mining.
-- You can recieve a prompt if you want to play a minigame by pressing `q` near the entrance e.g. Cave -> Dungeon minigame.
+- Player moves around a large map, using `Arrow keys`, to play various of minigames, gaining experience to level up skills.
+- The experience cap to reach the next level is increased with each level e.g. 10xp -> lvl2, 20xp -> lvl3.
+- The current 'Surface' skills are 'Mining' and 'Woodcutting' which can be perform when standing next to the object and pressing `q`.
+- Some objects require players to have a certain level to skill e.g. You can mine silver at lvl 5 mining.
+- Player can recieve a prompt if they want to play a minigame by pressing `q` near the entrance e.g. Cave -> Dungeon minigame.
 ### Tower Defence Minigame
 - Tower defence minigame description: the player defends end territory from waves of varied strength enemies boats by strategically placing towers that attack them. 
 - By destroying enemy boats and completing a wave gives the player money to buy towers with differing features of damage, fire rate, range of fire, and cost. 
-- The player wins the game by completing all 10 waves and not allowing more than 20 enemy boats to reach the end territory.
+- Player wins the game by completing all 10 waves and not allowing more than 20 enemy boats to reach the end territory.
 - To place a tower, you click on its icon on the right panel and click again on where you want to place it.
 ### Dungeon Minigame
 - Player has 5 hearts, where they kill and avoid getting hit by 6 waves of enemy zombies, where the number of zombies increases with each wave.
@@ -40,11 +39,11 @@ https://user-images.githubusercontent.com/53788322/130368134-e4100eeb-6bbc-41d7-
 - Use `Arrow keys` to move, press `Enter` to attack the zombie, `Spacebar` to jump, `n` to begin the next wave, and `ESC` to quit the minigame.
 
 ## Installation
-- need to install the libraries: pygame, tkinter, importlib
+- Need to install the libraries: pygame, tkinter, importlib
 - cmd command: `pip install `[name of library]
 
-## Assets used
-- All graphical assets are created by myself.
+## Assets
+- All graphical assets are created by myself using  the pixel art editor https://www.piskelapp.com/, and Adobe Photoshop 2021
 - Menu music:
 timebeing by airtone (c) copyright 2021 
 Licensed under a Creative Commons Attribution Noncommercial  (3.0) license. 

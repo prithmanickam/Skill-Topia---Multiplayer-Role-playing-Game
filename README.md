@@ -1,9 +1,8 @@
-# Skill-Topia – Mulitplayer Role-playing Game
+# Skill-Topia – Multiplayer Role-playing Game
 
 ## Video Gameplay
 
 https://user-images.githubusercontent.com/53788322/130368134-e4100eeb-6bbc-41d7-8c8b-8cf7eba38544.mp4
-
 
 ## Screenshots
 
